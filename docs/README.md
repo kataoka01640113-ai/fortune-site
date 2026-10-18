@@ -5,7 +5,7 @@
 ## 概要
 
 - **技術スタック**: React 18 + TypeScript + Vite
-- **スタイリング**: CSS（シンプルで保守性重視）
+- **スタイリング**: CSS（占いサイト風・シンプル設計）
 - **データ管理**: JSON/Excel形式
 - **テスト**: Vitest
 - **デプロイ**: GitHub Pagesなどの静的ホスティング
@@ -50,6 +50,8 @@ npm run dev
 
 ブラウザで `http://localhost:3000` を開きます。
 
+生年月日は「yyyymmdd」形式（例：19900415）で入力してください。
+
 ## ビルド
 
 ```bash
@@ -91,7 +93,7 @@ public/result/shukumeizu/shukumeizu.xlsx
 
 | 列 | 内容 | 例 |
 |---|---|---|
-| A | 生年月日（検索キー） | 1976-04-18 |
+| A | Excelシリアル値 | 28051 |
 | B | 左上の数値 | 37 |
 | C | 上段中央 | 車 |
 | D | 右上 | 印 |
@@ -102,12 +104,21 @@ public/result/shukumeizu/shukumeizu.xlsx
 | I | 下段中央 | 鳳 |
 | J | 右下 | 印 |
 
+**Excelシリアル値について**
+- 1900年1月1日 = 1
+- 1976年4月18日 = 28051
+- 2026年12月31日 = 46387
+
+例：生年月日「1976年4月18日」を検索する場合、A列でシリアル値「28051」を検索します。
+
 #### データの追加方法
 
 1. `public/result/shukumeizu/shukumeizu.xlsx` をExcelで開く
-2. 新しい行に生年月日と対応する宿命図の数値・文字を入力
-3. ファイルを保存
-4. サイトをリロード（キャッシュ削除が必要な場合がある）
+2. 生年月日をExcelシリアル値に変換する
+   - 参考：オンラインツール「Excel日付シリアル値計算機」や、別途Excelで `=DATE(1976,4,18)-DATE(1900,1,1)+1` で計算
+3. 新しい行にシリアル値と対応する宿命図の数値・文字を入力
+4. ファイルを保存
+5. サイトをリロード（キャッシュ削除が必要な場合がある）
 
 #### JSONデータ（フォールバック）
 
@@ -116,7 +127,7 @@ Excelが読み込めない場合は、`shukumeizuData.ts` に定義されたJSON
 ```typescript
 export const shukumeizuData = [
   {
-    dateKey: '1976-04-18',
+    serialNumber: 28051,
     topLeft: 37,
     topCenter: '車',
     // ... その他の項目
@@ -125,6 +136,8 @@ export const shukumeizuData = [
 ```
 
 JSONデータを追加する場合は、このファイルを編集してください。
+**serialNumber には Excelシリアル値を使用してください。**
+
 
 ### 診断文章
 
@@ -150,6 +163,7 @@ public/result/diagnosis-results/
 #### 記述形式
 
 マークダウン形式で記述します。`#`で始まる行が見出しになります。
+各ファイルには以下のセクションを含める必要があります（セクションが空の場合は非表示になります）：
 
 ```markdown
 # 基本性格
@@ -172,36 +186,35 @@ public/result/diagnosis-results/
 
 # 運気
 ここに運気の文章を記載します。
+
+# HIRO（占い師）から一言
+ここにHIROからのメッセージを記載します。
 ```
+
+**重要：「HIRO（占い師）から一言」セクションについて**
+- 診断テキストファイルの最後に「# HIRO（占い師）から一言」のセクションを追加してください
+- このセクションの内容が結果画面に特別に表示されます
+- HTMLタグ（`<p>`等）は自動的に追加されるため、プレーンテキストで記述してください
 
 #### 編集方法
 
 1. `public/result/diagnosis-results/` のテキストファイルをエディタで開く
 2. マークダウン形式で内容を編集
-3. ファイルを保存
-4. サイトをリロード
+3. 「# HIRO（占い師）から一言」セクションを追加（結果画面に特別に表示されます）
+4. ファイルを保存
+5. サイトをリロード
 
 ### HIROからのメッセージ
 
-#### 保存場所
-```
-public/result/hiro-messages/
-```
+現在、HIROからのメッセージは診断テキストファイル内の「# HIRO（占い師）から一言」セクションとして実装されています。
 
-#### ファイル一覧
+診断テキストの最後に以下のように記述してください：
 
-診断文章と同じ命名規則で配置：
-- daiju.txt
-- kusabana.txt
-- ... etc
-
-#### 記述形式
-
-シンプルなテキストファイル。マークダウン見出しは不要です。
-
-```
-このタイプの方へのメッセージを直接記載します。
+```markdown
+# HIRO（占い師）から一言
+このタイプの方へのメッセージを記載します。
 複数行でも構いません。
+段落ごとに改行してください。
 ```
 
 ### 外部リンク（LINE・Instagram・鑑定予約）
@@ -235,34 +248,38 @@ fortune-site/
 │   └── result/
 │       ├── shukumeizu/
 │       │   └── shukumeizu.xlsx       # 宿命図データ（Excel）
-│       ├── diagnosis-results/        # 診断文章
-│       │   ├── daiju.txt
-│       │   ├── kusabana.txt
-│       │   ├── taiyo.txt
-│       │   ├── tomoshibi.txt
-│       │   ├── sangaku.txt
-│       │   ├── daichi.txt
-│       │   ├── kotetsu.txt
-│       │   ├── houseki.txt
-│       │   ├── taikai.txt
-│       │   └── uro.txt
-│       └── hiro-messages/            # HIROのメッセージ（オプション）
+│       └── diagnosis-results/        # 診断文章（HIROメッセージ含む）
+│           ├── daiju.txt
+│           ├── kusabana.txt
+│           ├── taiyo.txt
+│           ├── tomoshibi.txt
+│           ├── sangaku.txt
+│           ├── daichi.txt
+│           ├── kotetsu.txt
+│           ├── houseki.txt
+│           ├── taikai.txt
+│           └── uro.txt
 │
 ├── src/
 │   ├── App.tsx                       # メインアプリケーション
-│   ├── App.css                       # スタイル
+│   ├── styles.css                    # スタイル（占いサイト風）
 │   ├── main.tsx                      # エントリーポイント
-│   ├── types.ts                      # 型定義
-│   ├── siteConfig.ts                 # サイト設定
-│   ├── typeClassifier.ts             # タイプ判定関数
-│   ├── typeClassifier.test.ts        # タイプ判定テスト
-│   ├── shukumeizuService.ts          # 宿命図取得サービス
-│   ├── shukumeizuData.ts             # JSONデータ（フォールバック）
-│   ├── diagnosisService.ts           # 診断テキスト読み込みサービス
-│   ├── diagnosisService.test.ts      # 診断サービステスト
-│   ├── TopPage.tsx                   # トップページコンポーネント
-│   ├── InputPage.tsx                 # 入力ページコンポーネント
-│   └── ResultPage.tsx                # 結果ページコンポーネント
+│   ├── types/
+│   │   └── index.ts                  # 型定義
+│   ├── config/
+│   │   └── siteConfig.ts             # サイト設定
+│   ├── services/
+│   │   ├── typeClassifier.ts         # タイプ判定関数
+│   │   ├── shukumeizuService.ts      # 宿命図取得サービス
+│   │   ├── shukumeizuData.ts         # JSONデータ（フォールバック）
+│   │   └── diagnosisService.ts       # 診断テキスト読み込みサービス
+│   ├── components/
+│   │   ├── TopPage.tsx               # トップページコンポーネント
+│   │   ├── InputPage.tsx             # 入力ページコンポーネント
+│   │   └── ResultPage.tsx            # 結果ページコンポーネント
+│   └── tests/
+│       ├── typeClassifier.test.ts    # タイプ判定テスト
+│       └── diagnosisService.test.ts  # 診断サービステスト
 │
 ├── index.html                        # HTMLテンプレート
 ├── package.json                      # 依存関係と実行スクリプト

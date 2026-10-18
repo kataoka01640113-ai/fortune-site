@@ -1,7 +1,7 @@
 
 export const shukumeizuData = [
   {
-    dateKey: '1976-04-18',
+    serialNumber: 28051,
     topLeft: 37,
     topCenter: '車',
     topRight: '印',

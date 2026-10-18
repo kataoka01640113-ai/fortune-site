@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import type { DiagnosisResult } from '../types'
 import { classifyType } from '../services/typeClassifier'
-import { fetchExcelFile, getShukumeizuFromExcel, dateToExcelKey } from '../services/shukumeizuService'
+import { fetchExcelFile, getShukumeizuFromExcel, dateToExcelSerialNumber } from '../services/shukumeizuService'
 import { loadDiagnosisText, loadHiroMessage } from '../services/diagnosisService'
 
 interface InputPageProps {
@@ -58,15 +58,15 @@ export default function InputPage({ onSubmit }: InputPageProps) {
     setLoading(true)
 
     try {
-      const dateKey = dateToExcelKey(y, m, d)
+      const serialNumber = dateToExcelSerialNumber(y, m, d)
       
       let shukumeizu
       try {
         const excelBuffer = await fetchExcelFile('/result/shukumeizu/shukumeizu.xlsx')
-        shukumeizu = getShukumeizuFromExcel(excelBuffer, dateKey)
+        shukumeizu = getShukumeizuFromExcel(excelBuffer, serialNumber)
       } catch (excelError) {
         // Excelが利用できない場合はスキップ（getShukumeizuFromExcelで自動的にJSONにフォールバック）
-        shukumeizu = getShukumeizuFromExcel(new ArrayBuffer(0), dateKey)
+        shukumeizu = getShukumeizuFromExcel(new ArrayBuffer(0), serialNumber)
       }
 
       if (shukumeizu.topLeft === null || shukumeizu.topLeft === undefined) {
